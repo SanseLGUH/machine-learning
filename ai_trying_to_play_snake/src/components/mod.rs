@@ -1,21 +1,10 @@
 use bevy::prelude::*;
-
-#[derive(Resource, Default)]
-pub struct Settings {
-	arena_width: u8, 
-	arena_height: u8,
-
-	food_at_once: u8,
-
-	world_speed: f64,
-
-	pause: bool,
-}
+use rand::prelude::*;
 
 #[derive(Component)]
 pub struct Size {
-	width: u8,
-	height: u8
+	pub width: u8,
+	pub height: u8
 }
 
 impl Size {
@@ -27,12 +16,24 @@ impl Size {
 	}
 }
 
-#[derive(Component)]
-pub struct Position {
-	x: u8,
-	y: u8
-}
-
 pub enum Direction {
 	Left, Up, Right, Down
 }
+
+#[derive(Component)]
+pub struct Position {
+	pub x: u8,
+	pub y: u8
+}
+
+impl Position {
+	pub fn random() -> Self {
+		let mut rng = rand::rng();
+
+		Self {
+			x: rng.random::<u8>(),
+			y: rng.random::<u8>(),
+		}
+	}
+}
+
