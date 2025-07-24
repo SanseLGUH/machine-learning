@@ -1,5 +1,10 @@
 use bevy::{ window::*, prelude::*};
 
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::prelude::*;
+
 mod components;
 mod plugins;
 
@@ -7,25 +12,43 @@ use crate::{
     components::*, plugins::*
 };
 
+#[derive(Reflect)]
 enum AiMethods {
-    Astar, ModifiedAstar,
-    QLearningAI, 
+    Astar, ModifiedAstar, QLearningAI 
 }  
 
 impl Default for AiMethods {
     fn default() -> Self {
-        AiMethods::QLearningAI
+        Self::QLearningAI
     }
 }
 
+#[derive(Reflect)]
 struct Snake {
-    head_pos: Position,
-    segments_pos: Vec< Position >,
-    current_direction: Direction 
+    current_direction: Direction, 
+    spawn_pos: [ u8; 2 ],
 }
 
-#[derive(Resource, Default)]
+#[derive(Reflect)]
+struct ArenaSize {
+    height: u8,
+    width: u8
+}
+
+impl Default for ArenaSize {
+    fn default() -> Self {
+        Self {
+            height: 50,
+            width: 80 
+        }
+    }
+}
+
+#[derive(Reflect, Resource, InspectorOptions)]
+#[reflect(Resource, InspectorOptions)]
 struct GameState {
+    arena_size: ArenaSize,
+
     snake: Option< Snake >,
     ai_method: AiMethods,
 
@@ -36,32 +59,80 @@ struct GameState {
     pause: bool
 }
 
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            arena_size: ArenaSize::default(),
+            snake: None,
+            ai_method: AiMethods::default(),
+
+            food_spawn_rate: Timer::new( std::time::Duration::from_secs_f32(1.), TimerMode::Repeating ),
+            food_at_once: 0,
+
+            world_speed: 1.,
+            pause: true
+        }
+    }
+}
+
 fn main() {
     App::new()
+        // Default Plugins
         .add_plugins( DefaultPlugins.set( WindowPlugin {
             primary_window: Some( Window {
                 title: String::from( "AI PLAY WITH MY SNAKE NOW! " ),
-                resolution: WindowResolution::new( 700., 700. ),
+                resolution: WindowResolution::new( 1200., 700. ),
                 ..default()
             } ),
             ..default()
-        } ) )   
-        .add_plugins( plugins::Snake )
+        } ),  )   
+        
+        // EguiPlugin
+        .add_plugins(( EguiPlugin::default(), WorldInspectorPlugin::new(), ResourceInspectorPlugin::<GameState>::default() ))
+        .add_plugins( (plugins::Snake, plugins::Apple) )
+        .init_resource::<GameState>()
+        .register_type::<GameState>()
+
+        // GameState, Positioning, Window_Scalling
         .insert_resource( GameState::default() )
         .add_systems( Startup, setup_camera )
-        .add_systems( Update, ( size_scalling, position_translation ) )
+        .add_systems( Update, ( size_scalling, position_translation, food_limitation ) )
         .run();
 }
 
-const ARENA_WIDTH: u8 = u8::MAX;
-const ARENA_HEIGHT: u8 = u8::MAX;
+fn size_scalling( game_state: Res<GameState>, windows: Query<&Window, With<PrimaryWindow>>, mut q: Query<(&Size, &mut Transform)> ) {
+    let window = windows.single().unwrap();
 
-fn size_scalling( windows: Query<&Window, With<PrimaryWindow>>, mut q: Query<(&Size, &mut Transform)> ) {
-    
+    for (sprite_size, mut transform) in q.iter_mut() {
+        transform.scale = Vec3::new(
+            ( sprite_size.width as f32 / game_state.arena_size.width as f32 * window.width() ) as f32,
+            ( sprite_size.height as f32 / game_state.arena_size.height as f32 * window.height() ) as f32,
+            1.,
+        );
+    }
 }
 
-fn position_translation( windows: Query<&Window, With<PrimaryWindow>>, mut q: Query<(&Position, &mut Transform)> ) {
+fn position_translation( game_state: Res<GameState>, windows: Query<&Window, With<PrimaryWindow>>, mut q: Query<(&Position, &mut Transform)> ) {
+    fn convert(pos: f32, bound_window: f32, bound_game: f32) -> f32 {
+        let tile_size = bound_window / bound_game;
+        pos / bound_game * bound_window - (bound_window / 2.) + (tile_size / 2.)
+    }
 
+    let window = windows.single().unwrap();
+
+    for (pos, mut transform) in q.iter_mut() {
+        transform.translation = Vec3::new(
+            convert(pos.x as f32, window.width() as f32, game_state.arena_size.width as f32),
+            convert(pos.y as f32, window.height() as f32, game_state.arena_size.height as f32),
+            0.0,
+        );
+    }
+}
+
+fn food_limitation( game_state: Res< GameState >, foods: Query< Entity, With<Eattable> > ) {
+    if foods.iter().len() >= game_state.food_at_once.into() {
+        // TODO
+    }
 }
 
 fn setup_camera(mut commands: Commands) {
