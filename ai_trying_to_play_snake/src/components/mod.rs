@@ -1,14 +1,36 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, asset::uuid::Uuid};
 use rand::prelude::*;
 
 #[derive(Component)]
 pub struct SnakeHead;
 
 #[derive(Component)]
-pub struct SnakeSegment;
+pub struct SnakeSegment {
+	count: i64,
+	followed_by: Entity 
+}
+
+impl SnakeSegment {
+	fn followed_by( en: Entity, count: i64 ) -> Self {
+		Self {
+			count: count,
+			followed_by: id
+		}	
+	}
+}
 
 #[derive(Component)]
 pub struct Eattable;
+
+#[derive(Component, Default)]
+pub enum Direction {
+    Right,
+    Left, 
+
+    #[default]
+    Up, 
+    Down
+}
 
 #[derive(Component)]
 pub struct Size {
@@ -17,22 +39,11 @@ pub struct Size {
 }
 
 impl Size {
-	pub fn squaire(x: f64) -> Self {
+	pub fn square(x: f64) -> Self {
 		Self {
 			width: x,
 			height: x
 		}
-	}
-}
-
-#[derive(Reflect)]
-pub enum Direction {
-	Left, Up, Right, Down
-}
-
-impl Default for Direction {
-	fn default() -> Self {
-		Self::Up
 	}
 }
 
