@@ -1,28 +1,51 @@
 use bevy::{prelude::*, asset::uuid::Uuid};
 use rand::prelude::*;
 
-#[derive(Component)]
-pub struct Head;
+#[derive(Default)]
+pub struct Tail {
+	pub last_position: Option< Position >
+}
+
+#[derive(Component, Default)]
+pub struct Head {
+	pub tail: Tail
+}
 
 #[derive(Component)]
 pub struct Segment {
-	index: i64,
-	followed_by: Entity 
+	pub owner_index: u32
 }
 
 impl Segment {
-	fn followed_by( en: Entity, si: i64 ) -> Self {
+	pub fn with_owner( index: u32 ) -> Self {
 		Self {
-			index: si,
-			followed_by: en
-		}	
+			owner_index: index
+		}
 	}
 }
 
 #[derive(Component)]
 pub struct Eattable;
 
-#[derive(Component, Default)]
+#[derive(Component)]
+pub struct Obstacle;
+
+#[derive(Event)]
+pub struct GrowthEvent {
+	pub owner_index: u32,
+	pub owner_position: Position
+}
+
+impl GrowthEvent {
+	pub fn new( owner_index: u32, owner_position: Position ) -> Self {
+		Self {
+			owner_index: owner_index,
+			owner_position: owner_position
+		}
+	}
+}
+
+#[derive(Reflect, Component, Default)]
 pub enum Direction {
     Right,
     Left, 
@@ -47,14 +70,21 @@ impl Size {
 	}
 }
 
-#[derive(Component)]
+#[derive(Default, Debug, Component, Reflect, PartialEq, Clone)]
 pub struct Position {
-	pub x: u8,
-	pub y: u8
+	pub x: i32,
+	pub y: i32
 }
 
 impl Position {
-	pub fn random(arena_w: u8, arena_h: u8) -> Self {
+	pub fn new( x: i32, y: i32 ) -> Self {
+		Self {
+			x: x,
+			y: y
+		}
+	}
+
+	pub fn random(arena_w: i32, arena_h: i32) -> Self {
 		let mut rng = rand::rng();
 
 		Self {

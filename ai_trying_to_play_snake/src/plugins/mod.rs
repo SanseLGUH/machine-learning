@@ -12,6 +12,7 @@ impl Plugin for Snake {
 			snake::ai::controller, snake::moves , snake::dies, snake::eats, 
 			snake::growths.after( snake::eats ) 
 		));
+		app.add_event::<GrowthEvent>();
 	}
 }
 
@@ -23,8 +24,23 @@ impl Plugin for Apple {
 	}
 }
 
-fn spawn_food(mut commands: Commands, time: Res<Time>, foods: Query< &Eattable >,  mut game_state: ResMut<GameState>) {
-	if foods.iter().len() >= game_state.food_at_once.into() || game_state.pause {
+fn spawn_food(mut commands: Commands, time: Res<Time>, foods: Query< (Entity, &Eattable) >,  mut game_state: ResMut<GameState>) {
+	let foods_count = foods.iter().len();
+
+	if foods_count > game_state.food_at_once as usize {
+		for (en, _) in foods {
+			commands.entity( en ).despawn();	
+		}
+	}
+
+	if game_state.pause {
 		return;
-	} 
+	}
+
+	if foods_count < game_state.food_at_once as usize && game_state.world_speed.food_spawn.tick( time.delta() ).finished() {	
+		commands.spawn((
+			Eattable, Sprite::from_color(Color::srgb( 1., 1., 1. ), Vec2::new(1., 1.)), Size::square( 1. ),
+			Position::random(game_state.arena_size.width, game_state.arena_size.height)
+		));
+	}
 }

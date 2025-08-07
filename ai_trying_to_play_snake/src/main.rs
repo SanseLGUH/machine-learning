@@ -23,23 +23,22 @@ fn main() {
         } ),  )   
         
         // EguiPlugin
-        .add_plugins( ( menu::Settings, bevy_egui::EguiPlugin::default() ) )
-        .add_plugins( (plugins::Snake, plugins::Apple) )
+        .add_plugins(( 
+            menu::Settings
+        ))
+        .add_plugins(( 
+            plugins::Snake, 
+            plugins::Apple 
+        ))
+        .register_type::<GameState>()
+        .register_type::<Direction>()
         .init_resource::<GameState>()
 
         // GameState, Positioning, Window_Scalling
         .insert_resource( GameState::default() )
         .add_systems( Startup, setup_camera )
-        .add_systems( Update, ( window::size_scalling, window::position_translation, food_limitation ) )
+        .add_systems( Update, ( window::size_scalling, window::position_translation ) )
         .run();
-}
-
-
-
-fn food_limitation( game_state: Res< GameState >, foods: Query< Entity, With<Eattable> > ) {
-    if foods.iter().len() >= game_state.food_at_once.into() {
-        // TODO
-    }
 }
 
 fn setup_camera(mut commands: Commands) {
