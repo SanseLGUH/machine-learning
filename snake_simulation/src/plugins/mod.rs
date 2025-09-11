@@ -8,8 +8,8 @@ pub struct Snake;
 impl Plugin for Snake {
 	fn build( &self, app: &mut App ) {
 		app.add_systems( Update, (
-			snake::spawn_head, snake::ai::controller, snake::moves , snake::dies, snake::eats, 
-			snake::growths.after( snake::eats ) 
+			snake::spawn_head, snake::ai::controller, snake::moves , 
+			snake::dies, snake::eats, snake::growths.after( snake::eats ) 
 		));
 		app.add_event::<GrowthEvent>();
 	}

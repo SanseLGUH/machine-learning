@@ -68,7 +68,6 @@ pub fn moves(
                 .iter_mut()
                 .filter(|(segment, _)| segment.owner_index == entity.index())
                 .collect();
-                
             snake_segments.sort_by_key(|(segment, _)| segment.index);
 
             let mut previous_positions = vec![old_head_pos];
@@ -117,25 +116,27 @@ pub fn eats(
 }
 
 pub fn dies( 
-	mut commands: Commands, 
-	game_state: Res<GameState>, 
-	heads: Query< (Entity, &Position), With< Head > >, segments: Query< (Entity, &Segment)>, 
-	obstacle: Query< &Position, With< Obstacle > >
+    mut commands: Commands, 
+    game_state: Res<GameState>, 
+    heads: Query<(Entity, &Position), With<Head>>, 
+    segments: Query<(Entity, &Segment)>, 
+    obstacles: Query<&Position, With<Obstacle>>
 ) {
-    for (entity, pos) in heads {
-    	for ob_pos in obstacle {
-    		if pos == ob_pos || out_of_bounds( pos, &game_state.arena_size ) {
+    fn despawn_snake(commands: &mut Commands, head: Entity, segments: &Query<(Entity, &Segment)>) {
+        for (entity, segment) in segments.iter() {
+            if segment.owner_index == head.index() {
+                commands.entity(entity).despawn();
+            }
+        }
+        commands.entity(head).despawn();
+    }
 
-    			for ( en, segment ) in segments {
-    				if entity.index() == segment.index {
-    					commands.entity( en ).despawn();
-    				}
-    			}
-
-    			commands.entity( entity ).despawn();
-    		}
-
-    	}
+    for (head, pos) in heads.iter() {
+        if out_of_bounds(pos, &game_state.arena_size) 
+            || obstacles.iter().any(|ob_pos| *pos == *ob_pos) 
+        {
+            despawn_snake(&mut commands, head, &segments);
+        }
     }
 }
 

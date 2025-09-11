@@ -2,6 +2,8 @@ use bevy::{prelude::*, asset::uuid::Uuid};
 use smart_default::SmartDefault;
 use rand::prelude::*;
 
+use crate::{settings::AiMethods, plugins::snake::ai::*};
+
 #[derive(Default)]
 pub struct Tail {
 	pub entitys: Vec<Position>,
@@ -16,6 +18,8 @@ pub struct Snake {
 
 #[derive(Component, SmartDefault)]
 pub struct Head {
+	#[default(_code = "AiMethods::Qlearn(Qlearning::new())")]
+	pub intelligence: AiMethods,
 	#[default(_code = "Timer::from_seconds( 0.3, TimerMode::Repeating)")]
     pub timer: Timer,
     pub direction: Direction,
