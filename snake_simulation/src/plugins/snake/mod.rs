@@ -26,8 +26,7 @@ pub fn spawn_head(
 		commands.spawn(
 			SnakeHeadBundle {
 			    head: Head::default(),
-			    sprite: Sprite::from_color(Color::srgb( 0.80, 0.49, 0.12 ), Vec2::new(1., 1.)),
-			    size: Size::square(1.0),
+			    sprite: Sprite::from_color(Color::srgb( 0.80, 0.49, 0.12 ), Vec2::new(1., 1.)), size: Size::square(1.0),
 			    position: Position::random(game_state.arena_size.width, game_state.arena_size.height)
 			}
 		);
@@ -94,16 +93,18 @@ fn position_calc( pos: &mut Position, direction: &Direction ) {
 
 pub fn eats(  
 	mut commands: Commands, 
-	heads: Query< (Entity, &Head, &Position) >, 
+	mut heads: Query< (Entity, &mut Head, &Position) >, 
 	foods: Query< (Entity, &Position), (With<Eattable>, Without< Head >) >, 
 	mut growth_writer: EventWriter<GrowthEvent> 
 ) {
-	for ( head_entity, head, head_pos) in heads {
+	for ( head_entity, mut head, head_pos) in heads {
 		for ( en, pos ) in foods {
 
 			if head_pos == pos {
 				commands.entity( en ).despawn();
 				
+				head.eat_count += 1;
+
 				growth_writer.send(
 					GrowthEvent::new( 
 						head_entity.index(), head.eat_count
@@ -117,8 +118,8 @@ pub fn eats(
 
 pub fn dies( 
     mut commands: Commands, 
-    game_state: Res<GameState>, 
-    heads: Query<(Entity, &Position), With<Head>>, 
+    mut game_state: ResMut<GameState>, 
+    mut heads: Query<(Entity, &Head, &Position)>, 
     segments: Query<(Entity, &Segment)>, 
     obstacles: Query<&Position, With<Obstacle>>
 ) {
@@ -131,11 +132,21 @@ pub fn dies(
         commands.entity(head).despawn();
     }
 
-    for (head, pos) in heads.iter() {
+    for (en, head, pos) in heads.iter() {
+
+    	// if head.eat_count >= game_state.best_qlearn.eat_count {
+    		
+		// 	if let AiMethods::Qlearn(params) = &head.intelligence {
+		// 	    game_state.best_qlearn.weights = params.weights;
+		// 	}
+    	// 	game_state.best_qlearn.eat_count = head.eat_count.clone();
+    	
+    	// } 
+
         if out_of_bounds(pos, &game_state.arena_size) 
             || obstacles.iter().any(|ob_pos| *pos == *ob_pos) 
         {
-            despawn_snake(&mut commands, head, &segments);
+            despawn_snake(&mut commands, en, &segments);
         }
     }
 }

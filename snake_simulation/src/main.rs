@@ -7,8 +7,17 @@ mod menu;
 mod settings;
 mod window;
 
+use crate::plugins::snake::ai::qlearn::SnakeState;
+
 use crate::components::*;
 use crate::settings::*;
+
+use std::collections::HashMap;
+
+#[derive(Default, Resource)]
+struct Qtable {
+    qt: HashMap<(SnakeState, Direction), f64>
+}
 
 fn main() {
     App::new()
@@ -23,9 +32,9 @@ fn main() {
         } ),  )   
         
         // EguiPlugin
-        .add_plugins(( 
+        .add_plugins(
             menu::Settings
-        ))
+        )
         .add_plugins(( 
             plugins::Snake, 
             plugins::Apple 
@@ -35,6 +44,11 @@ fn main() {
 
         // GameState, Positioning, Window_Scalling
         .insert_resource( GameState::default() )
+        .insert_resource( Qtable::default() )
+        .register_type::<GameState>()
+
+        .add_plugins(ResourceInspectorPlugin::<GameState>::default())
+
         .add_systems( Startup, setup_camera )
         .add_systems( Update, ( window::size_scalling, window::position_translation ) )
         .run();
@@ -43,3 +57,4 @@ fn main() {
 fn setup_camera(mut commands: Commands) {
     commands.spawn( Camera2d );
 }
+use bevy_inspector_egui::quick::ResourceInspectorPlugin;

@@ -2,7 +2,26 @@ use bevy::{prelude::*, asset::uuid::Uuid};
 use smart_default::SmartDefault;
 use rand::prelude::*;
 
-use crate::{settings::AiMethods, plugins::snake::ai::*};
+#[derive(SmartDefault, PartialEq, Debug)]
+pub enum AiMethods {
+    Astar,
+    ModifiedAstar,
+
+    #[default]
+    Qlearn
+}
+
+use std::fmt;
+
+impl fmt::Display for AiMethods {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AiMethods::Astar => write!(f, "Astar"),
+            AiMethods::ModifiedAstar => write!(f, "ModifiedAstar"),
+            AiMethods::Qlearn => write!(f, "Qlearn"),
+        }
+    }
+}
 
 #[derive(Default)]
 pub struct Tail {
@@ -10,15 +29,9 @@ pub struct Tail {
 	pub last_position: Option< Position >
 }
 
-#[derive(SmartDefault, Component, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Snake {
-	#[default(_code = "Uuid::new_v4()")]
-	id: Uuid
-} 
-
 #[derive(Component, SmartDefault)]
 pub struct Head {
-	#[default(_code = "AiMethods::Qlearn(Qlearning::new())")]
+	#[default(_code = "AiMethods::Qlearn")]
 	pub intelligence: AiMethods,
 	#[default(_code = "Timer::from_seconds( 0.3, TimerMode::Repeating)")]
     pub timer: Timer,
@@ -62,7 +75,7 @@ impl GrowthEvent {
 	}
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Clone, Hash, Eq, PartialEq, Debug)]
 pub enum Direction {
     Right,
     Left, 

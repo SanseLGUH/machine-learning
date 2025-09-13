@@ -6,7 +6,7 @@ use bevy_egui::{
 
 use crate::components::Direction;
 use crate::plugins::snake::ai::*;
-use crate::settings::{AiMethods, GameState};
+use crate::settings::GameState;
 
 pub struct Settings;
 
@@ -28,14 +28,14 @@ fn egui_setup(mut contexts: EguiContexts, mut game_state: ResMut<GameState>, dir
 
 		ui.toggle_value( &mut game_state.pause, "Pause" );
 
-		egui::ComboBox::from_label("Select one!")
-		    .selected_text( format!( "{}", game_state.ai_method ) )
-		    .show_ui(ui, |ui| {
-		        ui.selectable_value(&mut game_state.ai_method, AiMethods::Qlearn( Qlearning::default() ), "Qlearning");
-		        ui.selectable_value(&mut game_state.ai_method, AiMethods::Astar( Astar::default() ), "Astar");
-		        ui.selectable_value(&mut game_state.ai_method, AiMethods::ModifiedAstar( ModifiedAstar::default() ), "ModifiedAstar");
-		    }
-		);
+		// egui::ComboBox::from_label("Select one!")
+		//     .selected_text( format!( "{}", game_state.ai_method ) )
+		//     .show_ui(ui, |ui| {
+		//         ui.selectable_value(&mut game_state.ai_method, AiMethods::Qlearn( Qlearning::default() ), "Qlearning");
+		//         ui.selectable_value(&mut game_state.ai_method, AiMethods::Astar( Astar::default() ), "Astar");
+		//         ui.selectable_value(&mut game_state.ai_method, AiMethods::ModifiedAstar( ModifiedAstar::default() ), "ModifiedAstar");
+		//     }
+		// );
 
 		ui.horizontal( |ui| {
 			ui.add( egui::DragValue::new(&mut game_state.world_limit.snakes).speed(0.1) );

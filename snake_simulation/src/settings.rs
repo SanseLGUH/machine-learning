@@ -1,27 +1,10 @@
 use bevy::prelude::*;
 use smart_default::SmartDefault;
 
-use crate::plugins::snake::ai::{Qlearning, Astar, ModifiedAstar};
-
-#[derive(Reflect, SmartDefault, PartialEq, Debug)]
-pub enum AiMethods {
-    Astar( Astar ),
-    ModifiedAstar( ModifiedAstar ),
-
-    #[default]
-    Qlearn( Qlearning )
-}
-
-use std::fmt;
-
-impl fmt::Display for AiMethods {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            AiMethods::Astar(_) => write!(f, "Astar"),
-            AiMethods::ModifiedAstar(_) => write!(f, "ModifiedAstar"),
-            AiMethods::Qlearn(_) => write!(f, "Qlearn"),
-        }
-    }
+#[derive(Reflect, SmartDefault)]
+pub struct QlearnScores {
+    pub weights: [f64; 3],
+    pub eat_count: u32
 }
 
 #[derive(Reflect, SmartDefault)]
@@ -54,7 +37,7 @@ pub struct GameState {
     pub menu_state: bool,
     
     pub arena_size: ArenaSize,
-    pub ai_method: AiMethods,
+    pub best_qlearn: QlearnScores,
 
     pub world_limit: WorldLimitations,
 
